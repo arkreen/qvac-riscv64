@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # One-command setup: run the official @qvac/sdk on a riscv64 Linux board.
-set -euo pipefail
+# NB: no `pipefail` — diagnostic pipes like `ldd | head -1` close the reader
+# early and SIGPIPE the writer (exit 141), which would abort the whole script.
+set -eu
 REPO_RAW="https://raw.githubusercontent.com/arkreen/qvac-riscv64/main"
 REL="https://github.com/arkreen/qvac-riscv64/releases/latest/download"
 WORK="${QVAC_RV_HOME:-$HOME/qvac-rv}"
