@@ -46,11 +46,11 @@ node -v && npm -v
 ## 2. Quick start (one command)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/arkreen/qvac-riscv64/main/scripts/setup-vf2.sh | bash
+curl -fsSL https://raw.githubusercontent.com/boat-x/qvac-riscv64/main/scripts/setup-vf2.sh | bash
 ```
 
 This installs `@qvac/sdk` from npm, downloads the riscv64 runtime + prebuilds from
-[Releases](https://github.com/arkreen/qvac-riscv64/releases/latest), wires them in, fetches a small GGUF model,
+[Releases](https://github.com/boat-x/qvac-riscv64/releases/latest), wires them in, fetches a small GGUF model,
 and runs a real completion. Expected tail of the output:
 
 ```
@@ -86,7 +86,7 @@ npm init -y >/dev/null
 npm install @qvac/sdk@0.13.5
 
 # 3b. riscv64 Bare runtime + native prebuilds (from this repo's Release)
-REL=https://github.com/arkreen/qvac-riscv64/releases/latest/download
+REL=https://github.com/boat-x/qvac-riscv64/releases/latest/download
 curl -fL "$REL/bare-riscv64.tar.gz"           -o /tmp/bare-rv.tgz
 curl -fL "$REL/qvac-prebuilds-riscv64.tar.gz"  -o /tmp/pb-rv.tgz
 tar xzf /tmp/bare-rv.tgz -C "$WORK"            # -> $WORK/bare  (the runtime)
@@ -116,7 +116,7 @@ curl -fL "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qw
   -o "$WORK/model.gguf"
 
 # 3e. Run
-curl -fsSL https://raw.githubusercontent.com/arkreen/qvac-riscv64/main/scripts/run-llm.mjs -o "$WORK/run-llm.mjs"
+curl -fsSL https://raw.githubusercontent.com/boat-x/qvac-riscv64/main/scripts/run-llm.mjs -o "$WORK/run-llm.mjs"
 "$WORK/bare" "$WORK/run-llm.mjs" "$WORK/model.gguf" "In 5 words, what is RISC-V?"
 ```
 
@@ -135,7 +135,7 @@ so it loads fast:
 Override the model the setup script downloads:
 ```bash
 QVAC_MODEL_URL="https://modelscope.cn/models/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/master/qwen2.5-0.5b-instruct-q4_k_m.gguf" \
-  bash <(curl -fsSL https://raw.githubusercontent.com/arkreen/qvac-riscv64/main/scripts/setup-vf2.sh)
+  bash <(curl -fsSL https://raw.githubusercontent.com/boat-x/qvac-riscv64/main/scripts/setup-vf2.sh)
 ```
 Or point `run-llm.mjs` at any local `.gguf`:
 ```bash

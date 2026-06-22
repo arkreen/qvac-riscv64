@@ -3,8 +3,8 @@
 # NB: no `pipefail` — diagnostic pipes like `ldd | head -1` close the reader
 # early and SIGPIPE the writer (exit 141), which would abort the whole script.
 set -eu
-REPO_RAW="https://raw.githubusercontent.com/arkreen/qvac-riscv64/main"
-REL="https://github.com/arkreen/qvac-riscv64/releases/latest/download"
+REPO_RAW="https://raw.githubusercontent.com/boat-x/qvac-riscv64/main"
+REL="https://github.com/boat-x/qvac-riscv64/releases/latest/download"
 WORK="${QVAC_RV_HOME:-$HOME/qvac-rv}"
 # Default model = Hugging Face (universal). In China, set QVAC_MODEL_URL to the
 # ModelScope mirror (see README §4), or pre-place any .gguf at $WORK/model.gguf.
