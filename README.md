@@ -162,6 +162,40 @@ await run.final
 ```
 Run it with the riscv64 bare: `~/qvac-rv/bare your-script.mjs`. (Under Bare use `Bare`, not `process`.)
 
+### Serve it as a REST API (use from other devices)
+
+[`scripts/qvac-serve.mjs`](scripts/qvac-serve.mjs) wraps the LLM in an **OpenAI-compatible HTTP API** so any device on
+your network can use the board for inference. It runs entirely under `bare`, loads the model **once** at startup (kept
+warm), and serves it — no Node required:
+
+```bash
+cd ~/qvac-rv                                # where @qvac/sdk + node_modules live
+~/qvac-rv/bare qvac-serve.mjs 8080 ~/model.gguf   # both args optional (default :8080, $WORK/model.gguf)
+```
+
+Endpoints (`http://<board-ip>:8080`):
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET`  | `/health` | liveness + loaded model id |
+| `GET`  | `/v1/models` | OpenAI-style model list |
+| `POST` | `/v1/chat/completions` | OpenAI-compatible; body takes `messages[]` or a plain `prompt`; `stream:true` → SSE |
+| `POST` | `/generate` | alias of `/v1/chat/completions` |
+
+```bash
+curl -X POST http://<board-ip>:8080/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Hello"}],"max_tokens":64}'
+```
+Or just point any OpenAI client's base URL at `http://<board-ip>:8080/v1`.
+
+**Single-flight by design:** the model is a single instance, so only one inference runs at a time — a request that
+arrives while another is in flight gets `429 {"busy":true}` immediately (fail-fast, no queue) instead of overloading
+the CPU. To auto-start on boot without root, add a `@reboot` crontab entry that launches it with `setsid`.
+
+> ⚠️ Sustained CPU inference draws real current — power the board from a solid 5V/3A+ supply. An under-powered USB-C
+> brick can brown-out and hard-reset the board the moment all cores spin up under load.
+
 ---
 
 ## 6. What works on riscv64
