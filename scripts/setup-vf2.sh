@@ -4,17 +4,26 @@ set -euo pipefail
 REPO_RAW="https://raw.githubusercontent.com/arkreen/qvac-riscv64/main"
 REL="https://github.com/arkreen/qvac-riscv64/releases/latest/download"
 WORK="${QVAC_RV_HOME:-$HOME/qvac-rv}"
-MODEL_URL="${QVAC_MODEL_URL:-https://modelscope.cn/models/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/master/qwen2.5-0.5b-instruct-q4_k_m.gguf}"
+# Default model = Hugging Face (universal). In China, set QVAC_MODEL_URL to the
+# ModelScope mirror (see README §4), or pre-place any .gguf at $WORK/model.gguf.
+MODEL_URL="${QVAC_MODEL_URL:-https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf}"
 
 echo "== checks =="
 [ "$(uname -m)" = "riscv64" ] || { echo "ERROR: not riscv64 (this build is riscv64-only)"; exit 1; }
-command -v node >/dev/null || { echo "ERROR: need node/npm"; exit 1; }
+command -v node >/dev/null || { echo "ERROR: need node";  exit 1; }
+command -v npm  >/dev/null || { echo "ERROR: need npm";   exit 1; }
+command -v curl >/dev/null || { echo "ERROR: need curl";  exit 1; }
 ldd --version | head -1
+strings /usr/lib/riscv64-linux-gnu/libstdc++.so.6 2>/dev/null | grep -q GLIBCXX_3.4.30 \
+  && echo "libstdc++ GLIBCXX_3.4.30: OK" \
+  || echo "WARN: GLIBCXX_3.4.30 not found in system libstdc++ — engines may fail to load"
 
 mkdir -p "$WORK" && cd "$WORK"
 echo "== 1. official @qvac/sdk from npm (JS, unmodified) =="
 [ -f package.json ] || npm init -y >/dev/null
-npm install @qvac/sdk >/dev/null 2>&1 && echo "  @qvac/sdk @ $(node -e 'console.log(require(JSON.parse(require("fs").readFileSync("node_modules/@qvac/sdk/package.json")).version||"")||"installed")' 2>/dev/null || echo installed)"
+npm install @qvac/sdk >/dev/null 2>&1
+SDKVER=$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync("node_modules/@qvac/sdk/package.json")).version)' 2>/dev/null || echo "?")
+echo "  @qvac/sdk @ $SDKVER (official, from npm)"
 
 echo "== 2. riscv64 bare runtime + native prebuilds (from Release) =="
 curl -fL "$REL/bare-riscv64.tar.gz"          -o /tmp/bare-rv.tgz
