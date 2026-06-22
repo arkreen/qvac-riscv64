@@ -80,9 +80,10 @@ Prefer to understand / debug each step? The one-liner above just automates this:
 WORK=$HOME/qvac-rv
 mkdir -p "$WORK" && cd "$WORK"
 
-# 3a. Official SDK from npm (unmodified JavaScript)
+# 3a. Official SDK from npm (unmodified JavaScript). Pinned to the version these
+# riscv64 prebuilds were validated against.
 npm init -y >/dev/null
-npm install @qvac/sdk
+npm install @qvac/sdk@0.13.5
 
 # 3b. riscv64 Bare runtime + native prebuilds (from this repo's Release)
 REL=https://github.com/arkreen/qvac-riscv64/releases/latest/download
@@ -95,7 +96,11 @@ mkdir -p /tmp/pb && tar xzf /tmp/pb-rv.tgz -C /tmp/pb
 for d in /tmp/pb/prebuilds-riscv64/*/; do
   pkg=$(basename "$d")
   for c in "node_modules/@qvac/$pkg" "node_modules/$pkg"; do
-    [ -d "$c" ] && mkdir -p "$c/prebuilds/linux-riscv64" && cp "$d"*.bare "$c/prebuilds/linux-riscv64/"
+    [ -d "$c" ] || continue
+    mkdir -p "$c/prebuilds/linux-riscv64"
+    cp "$d"*.bare "$c/prebuilds/linux-riscv64/"
+    # also an unversioned <name>.bare so it matches any installed package version
+    for f in "$d"*.bare; do n=$(basename "$f"); cp "$f" "$c/prebuilds/linux-riscv64/${n%@*}.bare"; done
   done
 done
 

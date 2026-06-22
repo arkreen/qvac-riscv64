@@ -21,7 +21,9 @@ strings /usr/lib/riscv64-linux-gnu/libstdc++.so.6 2>/dev/null | grep -q GLIBCXX_
 mkdir -p "$WORK" && cd "$WORK"
 echo "== 1. official @qvac/sdk from npm (JS, unmodified) =="
 [ -f package.json ] || npm init -y >/dev/null
-npm install @qvac/sdk >/dev/null 2>&1
+# Pin to the version these riscv64 prebuilds were validated against.
+SDK_SPEC="${QVAC_SDK_SPEC:-@qvac/sdk@0.13.5}"
+npm install "$SDK_SPEC" >/dev/null 2>&1
 SDKVER=$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync("node_modules/@qvac/sdk/package.json")).version)' 2>/dev/null || echo "?")
 echo "  @qvac/sdk @ $SDKVER (official, from npm)"
 
@@ -35,7 +37,12 @@ PB=/tmp/pb/prebuilds-riscv64
 for d in "$PB"/*/; do
   pkg=$(basename "$d")
   for cand in "node_modules/@qvac/$pkg" "node_modules/$pkg"; do
-    if [ -d "$cand" ]; then mkdir -p "$cand/prebuilds/linux-riscv64"; cp "$d"*.bare "$cand/prebuilds/linux-riscv64/" 2>/dev/null || true; fi
+    if [ -d "$cand" ]; then
+      dst="$cand/prebuilds/linux-riscv64"; mkdir -p "$dst"
+      cp "$d"*.bare "$dst/" 2>/dev/null || true
+      # also drop an unversioned <name>.bare so it matches any installed package version
+      for f in "$d"*.bare; do n=$(basename "$f"); cp "$f" "$dst/${n%@*}.bare" 2>/dev/null || true; done
+    fi
   done
 done
 echo "  prebuilds deployed"
